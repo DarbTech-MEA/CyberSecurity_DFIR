@@ -1,0 +1,59 @@
+name: Validate submission
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check required files exist
+        run: |
+          test -f submission/report.md || { echo "::error::submission/report.md is missing. Copy and rename submission/report_template.md."; exit 1; }
+          test -f submission/layer.json || { echo "::error::submission/layer.json is missing. Copy and rename submission/layer_template.json."; exit 1; }
+
+      - name: Check report.md has all five required sections
+        run: |
+          missing=0
+          for heading in "## Part 1" "## Part 2" "## Part 3" "## Part 4" "## Part 5"; do
+            if ! grep -qF "$heading" submission/report.md; then
+              echo "::error::submission/report.md is missing the heading: $heading"
+              missing=1
+            fi
+          done
+          if [ "$missing" -eq 1 ]; then exit 1; fi
+
+      - name: Check report.md does not still contain template placeholder comments
+        run: |
+          if grep -q "Rename this file to report.md" submission/report.md; then
+            echo "::error::submission/report.md still has the template's placeholder comment at the top — looks like the template wasn't filled in."
+            exit 1
+          fi
+
+      - name: Validate layer.json is well-formed JSON
+        run: |
+          python3 -c "
+          import json, sys
+          with open('submission/layer.json') as f:
+              data = json.load(f)
+          techniques = data.get('techniques', [])
+          if not isinstance(techniques, list) or len(techniques) == 0:
+              print('::error::layer.json has no entries in \"techniques\" — it looks like the unfilled template.')
+              sys.exit(1)
+          for i, t in enumerate(techniques):
+              tid = t.get('techniqueID', '')
+              if not tid or tid.startswith('REPLACE_WITH'):
+                  print(f'::error::layer.json techniques[{i}] still has a placeholder techniqueID.')
+                  sys.exit(1)
+              comment = t.get('comment', '')
+              if not comment or comment.startswith('Replace with'):
+                  print(f'::error::layer.json techniques[{i}] ({tid}) still has a placeholder comment — point it at your actual evidence.')
+                  sys.exit(1)
+          print(f'OK: {len(techniques)} technique entries found, all look filled in.')
+          "
+
+      - name: Summary
+        run: echo "All structural checks passed. This confirms the submission is complete and well-formed — it does not grade correctness. Your instructor reviews the pull request against the rubric in ASSIGNMENT.md."

@@ -1,0 +1,19 @@
+{
+  "name": "REPLACE_WITH_YOUR_NAME — Weekly Assignment",
+  "versions": { "attack": "17", "navigator": "5.1.0", "layer": "4.5" },
+  "domain": "enterprise-attack",
+  "description": "Techniques identified from this week's scenario. See ASSIGNMENT.md for the full brief.",
+  "techniques": [
+    {
+      "techniqueID": "REPLACE_WITH_TECHNIQUE_ID",
+      "comment": "Replace with a one-line pointer to the specific evidence that supports this mapping.",
+      "color": "#e60000",
+      "enabled": true,
+      "score": 1
+    }
+  ],
+  "gradient": { "colors": ["#ffffff", "#e60000"], "minValue": 0, "maxValue": 1 },
+  "legendItems": [
+    { "label": "Identified from this week's scenario", "color": "#e60000" }
+  ]
+}
